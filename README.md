@@ -1,6 +1,6 @@
 # Qt Android CMake utility
 
-This utility tries to provide a CMake way of doing Qt/Android compilation and deployment.
+This utility tries to provide a CMake way of doing Qt/Android compilation and deployment.  
 Note: This project is "hardcoded" for Linux x86_64 host and use armv7a gnustl_static API-19
 (android 4.4.2) device target (with rtti and exception enabled).
 
@@ -16,7 +16,7 @@ cmake ..
 make
 ```
 
-To build for android:
+To build for android:  
 First, you must make sure that the following environment variables are defined:
 * ```JAVA_HOME```: root directory of the Java JDK (e.g. /usr/lib/jvm/default)
 * ```ANDROID_NDK_ROOT```: root directory of the Android NDK (e.g. ~/android-ndk-r10d)
@@ -42,7 +42,7 @@ if(ANDROID)
 endif()
 ```
 
-The first thing to do is to change your executable target into a library.
+The first thing to do is to change your executable target into a library.  
 On Android, the entry point has to be a Java activity, and your C++ code is then loaded (as a library) and called by this activity.
 
 ```cmake
@@ -71,8 +71,7 @@ Here is the full list of possible arguments:
 
 **NAME**
 
-The name of the application. If not given, the name of the source target is taken.
-
+The name of the application. If not given, the name of the source target is taken.  
 Example:
 ```cmake
 create_apk(my_app_apk my_app
@@ -82,8 +81,7 @@ create_apk(my_app_apk my_app
 
 **PACKAGE_NAME**
 
-The name of the application package. If not given, "org.qtproject.${source_target}" , where source_target is the name of the source target, is taken.
-
+The name of the application package. If not given, "org.qtproject.${source_target}" , where source_target is the name of the source target, is taken.  
 Example:
 ```cmake
 create_apk(my_app_apk my_app
@@ -92,5 +90,4 @@ create_apk(my_app_apk my_app
 ```
 
 # License
-
-_android-cmake_ is distributed under the terms of [GPL v3 License](http://opensource.org/licenses/GPL-3.0)
+_qtdroid_ is distributed under the terms of [GPL v3 License](http://opensource.org/licenses/GPL-3.0)
