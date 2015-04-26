@@ -5,7 +5,7 @@ project(qtsamples)
 ##  INSTALL PARAMETERS  ##
 ##########################
 # Offer the user the choice of overriding the installation directories
-#set(CMAKE_INSTALL_PREFIX install)
+set(CMAKE_INSTALL_PREFIX install)
 set(INSTALL_LIB_DIR lib CACHE PATH "Installation directory for libraries")
 set(INSTALL_BIN_DIR bin CACHE PATH "Installation directory for executables")
 set(INSTALL_INCLUDE_DIR include CACHE PATH "Installation directory for header files")

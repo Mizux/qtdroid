@@ -17,6 +17,11 @@ if(DEFINED ANDROID)
  return() # subsequent toolchain loading is not really needed
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Debug CACHE STRING "supported: Debug Release" FORCE)
+endif()
+message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
+
 set(JAVA_HOME $ENV{JAVA_HOME})
 if(NOT JAVA_HOME)
     message(FATAL_ERROR "The JAVA_HOME environment variable is not set. Please set it to the root directory of the JDK.")
@@ -190,4 +195,39 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 
 # Macro to create APK using Qt SDK
-
+macro(generate_apk TARGET SOURCE_TARGET PACKAGE_NAME)
+	add_custom_target(${TARGET}	ALL
+		# 1) create qtdeploy.json file
+		COMMAND ${CMAKE_COMMAND} -E echo "{" > qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"description\\\": \\\"This file is to be read by androiddeployqt\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"qt\\\": \\\"${ANDROID_QT_ROOT}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"sdk\\\": \\\"${ANDROID_SDK_ROOT}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"sdkBuildToolsRevision\\\": \\\"${ANDROID_BUILD_TOOL}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"ndk\\\": \\\"${ANDROID_NDK_ROOT}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"toolchain-prefix\\\": \\\"${ANDROID_TOOLCHAIN_MACHINE_NAME}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"tool-prefix\\\": \\\"${ANDROID_TOOLCHAIN_MACHINE_NAME}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"toolchain-version\\\": \\\"${ANDROID_COMPILER_VERSION}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"ndk-host\\\": \\\"${ANDROID_NDK_HOST}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"target-architecture\\\": \\\"${ANDROID_ABI}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"android-package\\\": \\\"${PACKAGE_NAME}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"android-app-name\\\": \\\"${SOURCE_TARGET}\\\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \\\"application-binary\\\": \\\"$<TARGET_FILE:${SOURCE_TARGET}>\\\"" >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo "}" >> qtdeploy.json
+		# 2) copy lib (gradle/androiddeployqt issue?)
+		COMMAND  ${CMAKE_COMMAND} -E make_directory libs/${ANDROID_ABI}/
+		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${SOURCE_TARGET}> libs/${ANDROID_ABI}/
+		# 3) Run androiddeployqt
+		COMMAND ${ANDROID_QT_ROOT}/bin/androiddeployqt
+		--input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
+		--output ${CMAKE_CURRENT_BINARY_DIR}
+		--deployment bundled
+		--android-platform android-${ANDROID_API}
+		--jdk ${JAVA_HOME}
+		--verbose --gradle
+		# 4) Copy file
+		COMMAND  ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/
+		COMMAND  ${CMAKE_COMMAND} -E copy ./build/outputs/apk/${SOURCE_TARGET}-debug.apk ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/
+		DEPENDS ${SOURCE_TARGET}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+	install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/${SOURCE_TARGET}-debug.apk DESTINATION ${INSTALL_BIN_DIR})
+endmacro()

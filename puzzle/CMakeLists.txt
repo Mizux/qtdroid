@@ -21,6 +21,7 @@ qt5_add_resources(_QRCS puzzle.qrc)
 
 if(ANDROID)
 	add_library(${_NAME} SHARED ${_HDRS} ${_SRCS} ${_QRCS})
+	generate_apk(${_NAME}_APK ${_NAME} "net.mizux.puzzle")
 else()
 	add_executable(${_NAME} ${_HDRS} ${_SRCS} ${_QRCS})
 endif()
