@@ -11,13 +11,14 @@ set(_NAME puzzle)
 ###################
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 # Qt Setting
 find_package(Qt5Widgets REQUIRED)
 
 file(GLOB_RECURSE _HDRS include *.hpp)
 file(GLOB_RECURSE _SRCS src *.cpp)
-qt5_add_resources(_QRCS puzzle.qrc)
+file(GLOB_RECURSE _QRCS data *.qrc)
 
 if(ANDROID)
 	add_library(${_NAME} SHARED ${_HDRS} ${_SRCS} ${_QRCS})

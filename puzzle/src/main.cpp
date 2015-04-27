@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 
     QApplication app(argc, argv);
     MainWindow window;
-    window.openImage(":/images/example.jpg");
+    window.openImage(":/images/test.png");
     window.show();
     return app.exec();
 }

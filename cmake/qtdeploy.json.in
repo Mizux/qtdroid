@@ -9,7 +9,5 @@
  "toolchain-version": "@ANDROID_COMPILER_VERSION@",
  "ndk-host": "@ANDROID_NDK_HOST@",
  "target-architecture": "@ANDROID_ABI@",
- "android-package": "@PACKAGE_NAME@",
- "android-app-name": "@SOURCE_TARGET@",
- "application-binary": "@QT_ANDROID_APP_PATH@"
+ "application-binary": "@<TARGET_FILE:${SOURCE_TARGET}>@"
 }

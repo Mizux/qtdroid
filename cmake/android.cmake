@@ -99,32 +99,10 @@ set(CMAKE_OBJCOPY      "${COMMAND_PREFIX}objcopy" CACHE PATH "objcopy")
 set(CMAKE_OBJDUMP      "${COMMAND_PREFIX}objdump" CACHE PATH "objdump")
 set(CMAKE_RANLIB       "${COMMAND_PREFIX}ranlib"  CACHE PATH "ranlib")
 
-# Force set compilers because standard identification works badly for us
-#include(CMakeForceCompiler)
-#CMAKE_FORCE_C_COMPILER( "${CMAKE_C_COMPILER}" GNU)
-#set(CMAKE_C_SIZEOF_DATA_PTR 4)
-#set(CMAKE_C_HAS_ISYSROOT 1)
-#set(CMAKE_C_COMPILER_ABI ELF)
-#CMAKE_FORCE_CXX_COMPILER( "${CMAKE_CXX_COMPILER}" GNU)
-#set(CMAKE_CXX_PLATFORM_ID Linux)
-#set(CMAKE_CXX_SIZEOF_DATA_PTR ${CMAKE_C_SIZEOF_DATA_PTR})
-#set(CMAKE_CXX_HAS_ISYSROOT 1)
-#set(CMAKE_CXX_COMPILER_ABI ELF)
-#set(CMAKE_CXX_SOURCE_FILE_EXTENSIONS cc cp cxx cpp CPP c++ C)
-## force ASM compiler (required for CMake < 2.8.5)
-#set(CMAKE_ASM_COMPILER_ID_RUN TRUE)
-#set(CMAKE_ASM_COMPILER_ID GNU)
-#set(CMAKE_ASM_COMPILER_WORKS TRUE)
-#set(CMAKE_ASM_COMPILER_FORCED TRUE)
-#set(CMAKE_COMPILER_IS_GNUASM 1)
-#set(CMAKE_ASM_SOURCE_FILE_EXTENSIONS s S asm)
-#foreach( lang C CXX ASM)
-#	set(CMAKE_${lang}_COMPILER_VERSION ${ANDROID_COMPILER_VERSION})
-#endforeach()
-
 # flags and definitions
 add_definitions(-DANDROID)
 set(ANDROID_CXX_FLAGS "")
+set(ANDROID_C_FLAGS "")
 set(ANDROID_LINKER_FLAGS "")
 
 # CXX_FLAGS
@@ -135,17 +113,18 @@ set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mthumb -fomit-frame-pointer -fno-st
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -finline-limit=64")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fsigned-char") # good/necessary when porting desktop libraries
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -march=${CMAKE_SYSTEM_PROCESSOR} -mfloat-abi=softfp")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfpu=neon")
-#set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfpu=vfpv3")
+#set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfpu=neon")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfpu=vfp")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fdata-sections -ffunction-sections")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -Wa,--noexecstack")
-set(CMAKE_CXX_FLAGS "-fpic ${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "-frtti ${CMAKE_CXX_FLAGS}")
-set(CMAKE_CXX_FLAGS "-fexceptions ${CMAKE_CXX_FLAGS}")
-set(CMAKE_C_FLAGS "-fpic ${CMAKE_C_FLAGS}")
-set(CMAKE_C_FLAGS "-fexceptions ${CMAKE_C_FLAGS}")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fpic")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -frtti")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fexceptions")
+set(ANDROID_C_FLAGS "${ANDROID_C_FLAGS} -fpic")
+set(ANDROID_C_FLAGS "${ANDROID_C_FLAGS} -fexceptions")
 
-# STL
+# GNU STL
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -std=gnu++11")
 set(ANDROID_STL	"${gnu-libstdc++}/${ANDROID_COMPILER_VERSION}")
 set(ANDROID_STL_INCLUDE_DIRS
 	"${ANDROID_STL}/include"
@@ -154,16 +133,18 @@ set(ANDROID_STL_INCLUDE_DIRS
 include_directories(SYSTEM
 	"${ANDROID_SYSROOT}/usr/include"
 	"${ANDROID_STL_INCLUDE_DIRS}")
-set(__libstl "${ANDROID_STL}/libs/${ANDROID_ABI}/libgnustl_static.a")
-set(__libsupcxx "${ANDROID_STL}/libs/${ANDROID_ABI}/libsupc++.a")
+#set(__libstl "${ANDROID_STL}/libs/${ANDROID_ABI}/thumb/libgnustl_static.a")
+#set(__libsupcxx "${ANDROID_STL}/libs/${ANDROID_ABI}/thumb/libsupc++.a")
+#set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${__libstl}")
+#set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${__libsupcxx}")
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -L${ANDROID_STL}/libs/${ANDROID_ABI}")
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -lgnustl_shared")
 
 # LINKER flags
-set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${__libstl}")
-set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${__libsupcxx}")
-set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -lm")
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -lm -lz")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--fix-cortex-a8")
-#set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined")
-#set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined")
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--gc-sections")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-z,noexecstack")
 
@@ -196,38 +177,45 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 
 # Macro to create APK using Qt SDK
 macro(generate_apk TARGET SOURCE_TARGET PACKAGE_NAME)
-	add_custom_target(${TARGET}	ALL
+	set(QT_ANDROID_APP_NAME ${SOURCE_TARGET})
+	set(QT_ANDROID_PACKAGE_NAME ${PACKAGE_NAME})
+	get_filename_component(TOOLCHAIN_DIR ${CMAKE_TOOLCHAIN_FILE} DIRECTORY)
+	#configure_file(${TOOLCHAIN_DIR}/AndroidManifest.xml.in	${CMAKE_CURRENT_BINARY_DIR}/android-build/AndroidManifest.xml @ONLY)
+
+	add_custom_command(OUTPUT android-build/libs qtdeploy.json
 		# 1) create qtdeploy.json file
 		COMMAND ${CMAKE_COMMAND} -E echo "{" > qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"description\\\": \\\"This file is to be read by androiddeployqt\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"qt\\\": \\\"${ANDROID_QT_ROOT}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"sdk\\\": \\\"${ANDROID_SDK_ROOT}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"sdkBuildToolsRevision\\\": \\\"${ANDROID_BUILD_TOOL}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"ndk\\\": \\\"${ANDROID_NDK_ROOT}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"toolchain-prefix\\\": \\\"${ANDROID_TOOLCHAIN_MACHINE_NAME}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"tool-prefix\\\": \\\"${ANDROID_TOOLCHAIN_MACHINE_NAME}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"toolchain-version\\\": \\\"${ANDROID_COMPILER_VERSION}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"ndk-host\\\": \\\"${ANDROID_NDK_HOST}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"target-architecture\\\": \\\"${ANDROID_ABI}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"android-package\\\": \\\"${PACKAGE_NAME}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"android-app-name\\\": \\\"${SOURCE_TARGET}\\\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \\\"application-binary\\\": \\\"$<TARGET_FILE:${SOURCE_TARGET}>\\\"" >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"description\": \"This file is to be read by androiddeployqt\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"qt\": \"${ANDROID_QT_ROOT}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"sdk\": \"${ANDROID_SDK_ROOT}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"sdkBuildToolsRevision\": \"${ANDROID_BUILD_TOOL}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"ndk\": \"${ANDROID_NDK_ROOT}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"toolchain-prefix\": \"${ANDROID_TOOLCHAIN_MACHINE_NAME}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"tool-prefix\": \"${ANDROID_TOOLCHAIN_MACHINE_NAME}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"toolchain-version\": \"${ANDROID_COMPILER_VERSION}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"ndk-host\": \"${ANDROID_NDK_HOST}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"target-architecture\": \"${ANDROID_ABI}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"application-binary\": \"$<TARGET_FILE:${SOURCE_TARGET}>\"" >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo "}" >> qtdeploy.json
 		# 2) copy lib (gradle/androiddeployqt issue?)
-		COMMAND  ${CMAKE_COMMAND} -E make_directory libs/${ANDROID_ABI}/
-		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${SOURCE_TARGET}> libs/${ANDROID_ABI}/
+		COMMAND  ${CMAKE_COMMAND} -E make_directory android-build/libs/${ANDROID_ABI}/
+		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${SOURCE_TARGET}> android-build/libs/${ANDROID_ABI}/
 		# 3) Run androiddeployqt
 		COMMAND ${ANDROID_QT_ROOT}/bin/androiddeployqt
 		--input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
-		--output ${CMAKE_CURRENT_BINARY_DIR}
+		--output ${CMAKE_CURRENT_BINARY_DIR}/android-build
 		--deployment bundled
 		--android-platform android-${ANDROID_API}
 		--jdk ${JAVA_HOME}
-		--verbose --gradle
-		# 4) Copy file
-		COMMAND  ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/
-		COMMAND  ${CMAKE_COMMAND} -E copy ./build/outputs/apk/${SOURCE_TARGET}-debug.apk ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/
-		DEPENDS ${SOURCE_TARGET}
+		--gradle --verbose
+		VERBATIM)
+	add_custom_target(${TARGET}	ALL
+		DEPENDS ${SOURCE_TARGET} android-build/libs
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-	install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/bin/${SOURCE_TARGET}-debug.apk DESTINATION ${INSTALL_BIN_DIR})
+
+	install(FILES
+		${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/android-build-debug.apk
+		DESTINATION ${INSTALL_BIN_DIR} RENAME ${SOURCE_TARGET}.apk)
+	#install(FILES ${CMAKE_CURRENT_BINARY_DIR}/android-build/build/outputs/apk/android-build-release-unsigned.apk
+	#	DESTINATION ${INSTALL_BIN_DIR} RENAME ${SOURCE_TARGET}.apk)
 endmacro()
