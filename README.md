@@ -23,7 +23,7 @@ First, you must make sure that the following environment variables are defined:
 * ```ANDROID_SDK_ROOT```: root directory of the Android SDK (e.g. ~/android-sdk-linux)
 * ```ANDROID_QT_ROOT```: root directory of the android Qt5 framework (e.g. ~/Qt/5.4/android_armv7)
 
-You can the run cmake as usual:
+Then you can run cmake as usual:
 ```
 mkdir build-android && cd build-android
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/android.cmake ..
