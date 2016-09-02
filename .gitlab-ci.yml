@@ -1,0 +1,15 @@
+image: ubuntu:latest
+
+before_script:
+   - apt-get update
+   - apt-get install -qq software-properties-common
+   - add-apt-repository ppa:george-edison55/cmake-3.x -y
+   - apt-get update -qq
+   - apt-get install -qq cmake gcc g++ qtbase5-dev qtdeclarative5-dev doxygen cppcheck
+
+my_project:
+  script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
