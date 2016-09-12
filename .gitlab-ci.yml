@@ -1,11 +1,20 @@
-image: ubuntu:latest
+image: mizux/android:latest
 
-before_script:
-   - apt-get update
-   - apt-get install -qq git build-essential cmake qtbase5-dev qtdeclarative5-dev doxygen cppcheck
+stages:
+  - build
+  - test
 
-my_project:
+build:linux:
+  stage: build
   script:
     - mkdir build && cd build
     - cmake ..
+    - make
+
+# Won't work since qt5 package don't contains android stuff
+build:android:
+  stage: build
+  script:
+    - mkdir build-android && cd build-android
+    - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/android.cmake ..
     - make

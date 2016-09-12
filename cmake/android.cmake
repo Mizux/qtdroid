@@ -11,14 +11,14 @@
 #
 #    ANDROID  will be set to true, you may test any of these
 #    variables to make necessary Android-specific configuration changes.
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
 
 if(DEFINED ANDROID)
  return() # subsequent toolchain loading is not really needed
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
-	set(CMAKE_BUILD_TYPE Debug CACHE STRING "supported: Debug Release" FORCE)
+	set(CMAKE_BUILD_TYPE Release CACHE STRING "supported: Debug Release" FORCE)
 endif()
 message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
 
@@ -28,19 +28,19 @@ if(NOT JAVA_HOME)
 endif()
 message(STATUS "java: ${JAVA_HOME}")
 
-set(ANDROID_NDK_ROOT $ENV{ANDROID_NDK_ROOT})
-if(NOT ANDROID_NDK_ROOT)
-	message(FATAL_ERROR "The ANDROID_NDK_ROOT environment variable is not set. Please set it.")
+set(ANDROID_NDK $ENV{ANDROID_NDK})
+if(NOT ANDROID_NDK)
+	message(FATAL_ERROR "The ANDROID_NDK environment variable is not set. Please set it.")
 endif()
-message(STATUS "ndk: ${ANDROID_NDK_ROOT}")
+message(STATUS "ndk: ${ANDROID_NDK}")
 
-set(ANDROID_SDK_ROOT $ENV{ANDROID_SDK_ROOT})
-if(NOT ANDROID_SDK_ROOT)
-	message(FATAL_ERROR "The ANDROID_SDK_ROOT environment variable is not set. Please set it.")
+set(ANDROID_SDK $ENV{ANDROID_SDK})
+if(NOT ANDROID_SDK)
+	message(FATAL_ERROR "The ANDROID_SDK environment variable is not set. Please set it.")
 endif()
-message(STATUS "sdk: ${ANDROID_SDK_ROOT}")
+message(STATUS "sdk: ${ANDROID_SDK}")
 
-file(GLOB tools RELATIVE ${ANDROID_SDK_ROOT}/build-tools ${ANDROID_SDK_ROOT}/build-tools/*)
+file(GLOB tools RELATIVE ${ANDROID_SDK}/build-tools ${ANDROID_SDK}/build-tools/*)
 list(SORT tools)
 list(REVERSE tools)
 list(GET tools 0 ANDROID_BUILD_TOOL)
@@ -49,12 +49,12 @@ message(STATUS "build-tool: ${ANDROID_BUILD_TOOL}")
 set(ANDROID_API 19)
 message(STATUS "api: ${ANDROID_API}")
 
-set(ANDROID_QT_ROOT $ENV{ANDROID_QT_ROOT})
-if(NOT ANDROID_QT_ROOT)
-	message(FATAL_ERROR "The ANDROID_QT_ROOT environment variable is not set. Please set it.")
+set(ANDROID_QT $ENV{ANDROID_QT})
+if(NOT ANDROID_QT)
+	message(FATAL_ERROR "The ANDROID_QT environment variable is not set. Please set it.")
 endif()
-message(STATUS "qt: ${ANDROID_QT_ROOT}")
-file(GLOB children ${ANDROID_QT_ROOT}/lib/cmake/*)
+message(STATUS "qt: ${ANDROID_QT}")
+file(GLOB children ${ANDROID_QT}/lib/cmake/*)
 foreach(child ${children})
 	if(IS_DIRECTORY ${child})
 		list(APPEND CMAKE_PREFIX_PATH ${child})
@@ -64,7 +64,7 @@ endforeach()
 set(ANDROID_TOOLCHAIN_MACHINE_NAME "arm-linux-androideabi")
 message(STATUS "toolchain prefix: ${ANDROID_TOOLCHAIN_MACHINE_NAME}")
 
-set(gnu-libstdc++ "${ANDROID_NDK_ROOT}/sources/cxx-stl/gnu-libstdc++")
+set(gnu-libstdc++ "${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++")
 file(GLOB version RELATIVE ${gnu-libstdc++}	${gnu-libstdc++}/4.*)
 list(SORT version)
 list(REVERSE version)
@@ -72,9 +72,9 @@ list(GET version 0 ANDROID_COMPILER_VERSION)
 message(STATUS "compiler: ${ANDROID_COMPILER_VERSION}")
 
 set(ANDROID_TOOLCHAIN_NAME ${ANDROID_TOOLCHAIN_MACHINE_NAME}-${ANDROID_COMPILER_VERSION})
-set(ANDROID_TOOLCHAIN_ROOT "${ANDROID_NDK_ROOT}/toolchains/${ANDROID_TOOLCHAIN_NAME}/prebuilt")
+set(ANDROID_TOOLCHAIN "${ANDROID_NDK}/toolchains/${ANDROID_TOOLCHAIN_NAME}/prebuilt")
 
-file(GLOB ANDROID_NDK_HOST RELATIVE ${ANDROID_TOOLCHAIN_ROOT} ${ANDROID_TOOLCHAIN_ROOT}/*)
+file(GLOB ANDROID_NDK_HOST RELATIVE ${ANDROID_TOOLCHAIN} ${ANDROID_TOOLCHAIN}/*)
 message(STATUS "ndk-host: ${ANDROID_NDK_HOST}")
 
 set(ANDROID_ABI armeabi-v7a)
@@ -85,8 +85,8 @@ set(CMAKE_SYSTEM_VERSION 1)
 set(CMAKE_SYSTEM_PROCESSOR "armv7-a")
 
 # setup the cross-compiler
-set(ANDROID_TOOLCHAIN_ROOT "${ANDROID_TOOLCHAIN_ROOT}/${ANDROID_NDK_HOST}")
-set(COMMAND_PREFIX "${ANDROID_TOOLCHAIN_ROOT}/bin/${ANDROID_TOOLCHAIN_MACHINE_NAME}-")
+set(ANDROID_TOOLCHAIN "${ANDROID_TOOLCHAIN}/${ANDROID_NDK_HOST}")
+set(COMMAND_PREFIX "${ANDROID_TOOLCHAIN}/bin/${ANDROID_TOOLCHAIN_MACHINE_NAME}-")
 set(CMAKE_ASM_COMPILER "${COMMAND_PREFIX}gcc"     CACHE PATH "assembler")
 set(CMAKE_C_COMPILER   "${COMMAND_PREFIX}gcc"     CACHE PATH "C compiler")
 set(CMAKE_CXX_COMPILER "${COMMAND_PREFIX}g++"     CACHE PATH "C++ compiler")
@@ -106,7 +106,7 @@ set(ANDROID_C_FLAGS "")
 set(ANDROID_LINKER_FLAGS "")
 
 # CXX_FLAGS
-set(ANDROID_SYSROOT	"${ANDROID_NDK_ROOT}/platforms/android-${ANDROID_API}/arch-arm")
+set(ANDROID_SYSROOT	"${ANDROID_NDK}/platforms/android-${ANDROID_API}/arch-arm")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} --sysroot=${ANDROID_SYSROOT}")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -funwind-tables")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mthumb -fomit-frame-pointer -fno-strict-aliasing")
@@ -170,7 +170,7 @@ set( CMAKE_EXE_LINKER_FLAGS    "${ANDROID_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS
 set(ANDROID True)
 
 # where is the target environment
-set(CMAKE_FIND_ROOT_PATH "${ANDROID_TOOLCHAIN_ROOT}/bin" "${ANDROID_SYSROOT}" "${CMAKE_INSTALL_PREFIX}")
+set(CMAKE_FIND_ROOT_PATH "${ANDROID_TOOLCHAIN}/bin" "${ANDROID_SYSROOT}" "${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
@@ -186,10 +186,10 @@ macro(generate_apk TARGET SOURCE_TARGET PACKAGE_NAME)
 		# 1) create qtdeploy.json file
 		COMMAND ${CMAKE_COMMAND} -E echo "{" > qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"description\": \"This file is to be read by androiddeployqt\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \"qt\": \"${ANDROID_QT_ROOT}\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \"sdk\": \"${ANDROID_SDK_ROOT}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"qt\": \"${ANDROID_QT}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"sdk\": \"${ANDROID_SDK}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"sdkBuildToolsRevision\": \"${ANDROID_BUILD_TOOL}\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \"ndk\": \"${ANDROID_NDK_ROOT}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"ndk\": \"${ANDROID_NDK}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"toolchain-prefix\": \"${ANDROID_TOOLCHAIN_MACHINE_NAME}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"tool-prefix\": \"${ANDROID_TOOLCHAIN_MACHINE_NAME}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"toolchain-version\": \"${ANDROID_COMPILER_VERSION}\"," >> qtdeploy.json
@@ -201,13 +201,14 @@ macro(generate_apk TARGET SOURCE_TARGET PACKAGE_NAME)
 		COMMAND  ${CMAKE_COMMAND} -E make_directory android-build/libs/${ANDROID_ABI}/
 		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${SOURCE_TARGET}> android-build/libs/${ANDROID_ABI}/
 		# 3) Run androiddeployqt
-		COMMAND ${ANDROID_QT_ROOT}/bin/androiddeployqt
+		COMMAND ${ANDROID_QT}/bin/androiddeployqt
 		--input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
 		--output ${CMAKE_CURRENT_BINARY_DIR}/android-build
 		--deployment bundled
 		--android-platform android-${ANDROID_API}
 		--jdk ${JAVA_HOME}
 		--gradle --verbose
+		--release
 		VERBATIM)
 	add_custom_target(${TARGET}	ALL
 		DEPENDS ${SOURCE_TARGET} android-build/libs

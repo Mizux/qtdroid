@@ -19,9 +19,9 @@ make
 To build for android:  
 First, you must make sure that the following environment variables are defined:
 * ```JAVA_HOME```: root directory of the Java JDK (e.g. /usr/lib/jvm/default)
-* ```ANDROID_NDK_ROOT```: root directory of the Android NDK (e.g. ~/android-ndk-r10d)
-* ```ANDROID_SDK_ROOT```: root directory of the Android SDK (e.g. ~/android-sdk-linux)
-* ```ANDROID_QT_ROOT```: root directory of the android Qt5 framework (e.g. ~/Qt/5.4/android_armv7)
+* ```ANDROID_NDK```: root directory of the Android NDK (e.g. /usr/local/android-ndk)
+* ```ANDROID_SDK```: root directory of the Android SDK (e.g. /usr/local/android-sdk-linux)
+* ```ANDROID_QT```: root directory of the android Qt5 framework (e.g. ~/Qt/5.4/android_armv7)
 
 Then you can run cmake as usual:
 ```
