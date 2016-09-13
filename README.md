@@ -1,10 +1,11 @@
 # Qt Android CMake utility
 
 This utility tries to provide a CMake way of doing Qt/Android compilation and deployment.  
-Note: This project is "hardcoded" for Linux x86_64 host and use armv7a gnustl_static API-19
+Note: This project is "hardcoded" for Linux x86_64 host and use armv7 gnustl_static API-19
 (android 4.4.2) device target (with rtti and exception enabled).
 
-Qt5.4 only provide armv7a libraries currently.
+**WARNING**
+Qt5.7 provide armv7 and x86 libraries currently, here only armv7 is use.
 For a more complete toolchain, look at  https://github.com/taka-no-me/android-cmake
 
 ## HowTo build samples
