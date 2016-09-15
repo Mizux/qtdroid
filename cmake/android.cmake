@@ -3,8 +3,8 @@
 ################################
 #  Usage Linux:
 #   $ export JAVA_HOME=/absolute/path/to/java/home
-#   $ export ANDROID_NDK_ROOT=/absolute/path/to/the/android-ndk
-#   $ export ANDROID_SDK_ROOT=/absolute/path/to/the/android-sdk
+#   $ export ANDROID_NDK=/absolute/path/to/the/android-ndk
+#   $ export ANDROID_SDK=/absolute/path/to/the/android-sdk-linux
 #   $ mkdir build && cd build
 #   $ cmake -DCMAKE_TOOLCHAIN_FILE=path/to/the/android.cmake ..
 #   $ make -j8
@@ -22,48 +22,44 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "build type: ${CMAKE_BUILD_TYPE}")
 
+# Find JAVA
 set(JAVA_HOME $ENV{JAVA_HOME})
 if(NOT JAVA_HOME)
     message(FATAL_ERROR "The JAVA_HOME environment variable is not set. Please set it to the root directory of the JDK.")
 endif()
 message(STATUS "java: ${JAVA_HOME}")
 
+# Find NDK
 set(ANDROID_NDK $ENV{ANDROID_NDK})
 if(NOT ANDROID_NDK)
 	message(FATAL_ERROR "The ANDROID_NDK environment variable is not set. Please set it.")
 endif()
 message(STATUS "ndk: ${ANDROID_NDK}")
 
+# Find SDK
 set(ANDROID_SDK $ENV{ANDROID_SDK})
 if(NOT ANDROID_SDK)
 	message(FATAL_ERROR "The ANDROID_SDK environment variable is not set. Please set it.")
 endif()
 message(STATUS "sdk: ${ANDROID_SDK}")
 
+# Find Last build-tools
 file(GLOB tools RELATIVE ${ANDROID_SDK}/build-tools ${ANDROID_SDK}/build-tools/*)
 list(SORT tools)
 list(REVERSE tools)
 list(GET tools 0 ANDROID_BUILD_TOOL)
 message(STATUS "build-tool: ${ANDROID_BUILD_TOOL}")
 
+# Force to use API 19
 set(ANDROID_API 19)
-message(STATUS "api: ${ANDROID_API}")
+message(STATUS "android api: ${ANDROID_API}")
 
-set(ANDROID_QT $ENV{ANDROID_QT})
-if(NOT ANDROID_QT)
-	message(FATAL_ERROR "The ANDROID_QT environment variable is not set. Please set it.")
-endif()
-message(STATUS "qt: ${ANDROID_QT}")
-file(GLOB children ${ANDROID_QT}/lib/cmake/*)
-foreach(child ${children})
-	if(IS_DIRECTORY ${child})
-		list(APPEND CMAKE_PREFIX_PATH ${child})
-	endif()
-endforeach()
-
+# Force to use arm eabi
 set(ANDROID_TOOLCHAIN_MACHINE_NAME "arm-linux-androideabi")
 message(STATUS "toolchain prefix: ${ANDROID_TOOLCHAIN_MACHINE_NAME}")
 
+# Force to use gnustdc++
+message(STATUS "stl: gnu-libstdc++")
 set(gnu-libstdc++ "${ANDROID_NDK}/sources/cxx-stl/gnu-libstdc++")
 file(GLOB version RELATIVE ${gnu-libstdc++}	${gnu-libstdc++}/4.*)
 list(SORT version)
@@ -77,12 +73,11 @@ set(ANDROID_TOOLCHAIN "${ANDROID_NDK}/toolchains/${ANDROID_TOOLCHAIN_NAME}/prebu
 file(GLOB ANDROID_NDK_HOST RELATIVE ${ANDROID_TOOLCHAIN} ${ANDROID_TOOLCHAIN}/*)
 message(STATUS "ndk-host: ${ANDROID_NDK_HOST}")
 
-set(ANDROID_ABI armeabi-v7a)
-message(STATUS "target-architecture: ${ANDROID_ABI}")
+set(ANDROID_EABI armeabi-v7a)
+message(STATUS "target-architecture: ${ANDROID_EABI}")
 
 set(CMAKE_SYSTEM_NAME Linux)
 set(CMAKE_SYSTEM_VERSION 1)
-set(CMAKE_SYSTEM_PROCESSOR "armv7-a")
 
 # setup the cross-compiler
 set(ANDROID_TOOLCHAIN "${ANDROID_TOOLCHAIN}/${ANDROID_NDK_HOST}")
@@ -107,42 +102,41 @@ set(ANDROID_LINKER_FLAGS "")
 
 # CXX_FLAGS
 set(ANDROID_SYSROOT	"${ANDROID_NDK}/platforms/android-${ANDROID_API}/arch-arm")
+message(STATUS "sysroot: ${ANDROID_SYSROOT}")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} --sysroot=${ANDROID_SYSROOT}")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -funwind-tables")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -march=armv7-a -fpic")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -funwind-tables -fstack-protector")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mthumb -fomit-frame-pointer -fno-strict-aliasing")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -finline-limit=64")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fsigned-char") # good/necessary when porting desktop libraries
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -march=${CMAKE_SYSTEM_PROCESSOR} -mfloat-abi=softfp")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -finline-limit=64 -fsigned-char") # good/necessary when porting desktop libraries
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfloat-abi=softfp")
 #set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfpu=neon")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -mfpu=vfp")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fdata-sections -ffunction-sections")
 set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -Wa,--noexecstack")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fpic")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -frtti")
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -fexceptions")
-set(ANDROID_C_FLAGS "${ANDROID_C_FLAGS} -fpic")
-set(ANDROID_C_FLAGS "${ANDROID_C_FLAGS} -fexceptions")
+set(ANDROID_C_FLAGS "${ANDROID_C_FLAGS} ${ANDROID_CXX_FLAGS}")
+set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -std=gnu++11 -frtti -fexceptions")
 
-# GNU STL
-set(ANDROID_CXX_FLAGS "${ANDROID_CXX_FLAGS} -std=gnu++11")
+# GNU STL and sysroot include
 set(ANDROID_STL	"${gnu-libstdc++}/${ANDROID_COMPILER_VERSION}")
 set(ANDROID_STL_INCLUDE_DIRS
 	"${ANDROID_STL}/include"
 	"${ANDROID_STL}/include/backward"
-	"${ANDROID_STL}/libs/${ANDROID_ABI}/include")
+	"${ANDROID_STL}/libs/${ANDROID_EABI}/include")
 include_directories(SYSTEM
 	"${ANDROID_SYSROOT}/usr/include"
 	"${ANDROID_STL_INCLUDE_DIRS}")
-#set(__libstl "${ANDROID_STL}/libs/${ANDROID_ABI}/thumb/libgnustl_static.a")
-#set(__libsupcxx "${ANDROID_STL}/libs/${ANDROID_ABI}/thumb/libsupc++.a")
+# Using Static STL
+#set(__libstl "${ANDROID_STL}/libs/${ANDROID_EABI}/thumb/libgnustl_static.a")
+#set(__libsupcxx "${ANDROID_STL}/libs/${ANDROID_EABI}/thumb/libsupc++.a")
 #set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${__libstl}")
 #set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${__libsupcxx}")
-set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -L${ANDROID_STL}/libs/${ANDROID_ABI}")
+# Using Shared one (already on target)
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -L${ANDROID_STL}/libs/${ANDROID_EABI}")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -lgnustl_shared")
 
 # LINKER flags
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -lm -lz")
-set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--fix-cortex-a8")
+set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -march=armv7-a -Wl,--fix-cortex-a8")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--no-undefined")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,-allow-shlib-undefined")
 set(ANDROID_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} -Wl,--gc-sections")
@@ -161,19 +155,28 @@ set( CMAKE_EXE_LINKER_FLAGS    "-Wl,-z,nocopyreloc"      CACHE STRING "executabl
 
 # finish flags
 set( CMAKE_CXX_FLAGS           "${ANDROID_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-set( CMAKE_C_FLAGS             "${ANDROID_CXX_FLAGS} ${CMAKE_C_FLAGS}")
+set( CMAKE_C_FLAGS             "${ANDROID_C_FLAGS} ${CMAKE_C_FLAGS}")
 set( CMAKE_SHARED_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 set( CMAKE_MODULE_LINKER_FLAGS "${ANDROID_LINKER_FLAGS} ${CMAKE_MODULE_LINKER_FLAGS}")
 set( CMAKE_EXE_LINKER_FLAGS    "${ANDROID_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
 
-# set these global flags for cmake client scripts to change behavior
-set(ANDROID True)
+# Find Qt5 android_armv7
+set(ANDROID_QT $ENV{ANDROID_QT})
+if(NOT ANDROID_QT)
+	message(FATAL_ERROR "The ANDROID_QT environment variable is not set. Please set it.")
+endif()
+message(STATUS "qt: ${ANDROID_QT}")
+list(APPEND CMAKE_PREFIX_PATH "${ANDROID_QT}/lib/cmake")
+message(STATUS "cmake prefix: ${CMAKE_PREFIX_PATH}")
 
 # where is the target environment
 set(CMAKE_FIND_ROOT_PATH "${ANDROID_TOOLCHAIN}/bin" "${ANDROID_SYSROOT}" "${CMAKE_INSTALL_PREFIX}")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+
+# set these global flags for cmake client scripts to change behavior
+set(ANDROID True)
 
 # Macro to create APK using Qt SDK
 macro(generate_apk TARGET SOURCE_TARGET PACKAGE_NAME)
@@ -194,12 +197,12 @@ macro(generate_apk TARGET SOURCE_TARGET PACKAGE_NAME)
 		COMMAND ${CMAKE_COMMAND} -E echo " \"tool-prefix\": \"${ANDROID_TOOLCHAIN_MACHINE_NAME}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"toolchain-version\": \"${ANDROID_COMPILER_VERSION}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"ndk-host\": \"${ANDROID_NDK_HOST}\"," >> qtdeploy.json
-		COMMAND ${CMAKE_COMMAND} -E echo " \"target-architecture\": \"${ANDROID_ABI}\"," >> qtdeploy.json
+		COMMAND ${CMAKE_COMMAND} -E echo " \"target-architecture\": \"${ANDROID_EABI}\"," >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo " \"application-binary\": \"$<TARGET_FILE:${SOURCE_TARGET}>\"" >> qtdeploy.json
 		COMMAND ${CMAKE_COMMAND} -E echo "}" >> qtdeploy.json
 		# 2) copy lib (gradle/androiddeployqt issue?)
-		COMMAND  ${CMAKE_COMMAND} -E make_directory android-build/libs/${ANDROID_ABI}/
-		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${SOURCE_TARGET}> android-build/libs/${ANDROID_ABI}/
+		COMMAND  ${CMAKE_COMMAND} -E make_directory android-build/libs/${ANDROID_EABI}/
+		COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${SOURCE_TARGET}> android-build/libs/${ANDROID_EABI}/
 		# 3) Run androiddeployqt
 		COMMAND ${ANDROID_QT}/bin/androiddeployqt
 		--input ${CMAKE_CURRENT_BINARY_DIR}/qtdeploy.json
