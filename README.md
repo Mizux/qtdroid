@@ -1,3 +1,4 @@
+[![build status](https://gitlab.com/Mizux/qtdroid/badges/master/build.svg)](https://gitlab.com/Mizux/qtdroid/commits/master)
 # Qt Android CMake utility
 
 This utility tries to provide a CMake way of doing Qt/Android compilation and deployment.  
