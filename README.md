@@ -1,40 +1,42 @@
 [![build status](https://gitlab.com/Mizux/qtdroid/badges/master/build.svg)](https://gitlab.com/Mizux/qtdroid/commits/master)
 # Qt Android CMake utility
 
-This utility tries to provide a CMake way of doing Qt/Android compilation and deployment.  
-Note: This project is "hardcoded" for Linux x86_64 host and use armv7 gnustl_static API-19
-(android 4.4.2) device target (with rtti and exception enabled).
+This utility tries to provide a CMake way example of doing Qt/Android compilation and deployment.  
+Note: This project is "hardcoded" for:  
+* host: Linux x86_64
+* target: armv7_a
+* API-19 (android 4.4.2)
+* stl: gnustl_static (with rtti and exception enabled).
 
 **WARNING**
-Qt5.7 provide armv7 and x86 libraries currently, here only armv7 is use.
-For a more complete toolchain, look at  https://github.com/taka-no-me/android-cmake
+Qt5.7 provide armv7_a and x86 libraries currently, here only armv7 is use.  
+For a more complete toolchain, look at the two year old https://github.com/taka-no-me/android-cmake  
+side note: Google have integrated cmake and taka-no-me hack in "its" cmake 3.6 package...
 
-## HowTo build samples
-
-To build for linux (i.e. host):
+# HowTo build samples
+## Native/Host Build 
 ```
 mkdir build && cd build
 cmake ..
 make
 ```
 
+## Android Build
 To build for android:  
 First, you must make sure that the following environment variables are defined:
 * ```JAVA_HOME```: root directory of the Java JDK (e.g. /usr/lib/jvm/default)
-* ```ANDROID_NDK```: root directory of the Android NDK (e.g. /usr/local/android-ndk)
-* ```ANDROID_SDK```: root directory of the Android SDK (e.g. /usr/local/android-sdk-linux)
+* ```ANDROID_HOME```: root directory of the Android NDK (e.g. /usr/local/android-ndk-linux)
 * ```ANDROID_QT```: root directory of the android Qt5 framework (e.g. ~/Qt/5.4/android_armv7)
 
-Then you can run cmake as usual:
+Then you can run cmake as usual specifying the toolchain:
 ```
 mkdir build-android && cd build-android
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=../cmake/android.cmake ..
 make
 ```
 
-## Getting started
-
-### HowTo integrate it to your CMake configuration
+# Getting started
+## HowTo integrate it to your CMake configuration
 
 The toolchain file defines ```ANDROID``` CMake variable which can be used to add Android-specific stuff:
 
@@ -63,7 +65,7 @@ if(ANDROID)
 endif()
 ```
 
-### Options of the ```create_apk``` macro
+## Options of the ```create_apk``` macro
 
 The first two arguments of the macro are the name of the APK target to be created, and the target it must be based on (your executable). These are of course mandatory.
 
