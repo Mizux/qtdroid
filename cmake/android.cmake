@@ -3,8 +3,7 @@
 ################################
 #  Usage Linux:
 #   $ export JAVA_HOME=/absolute/path/to/java/home
-#   $ export ANDROID_NDK=/absolute/path/to/the/android-ndk
-#   $ export ANDROID_SDK=/absolute/path/to/the/android-sdk-linux
+#   $ export ANDROID_HOME=/absolute/path/to/the/android-sdk-linux
 #   $ mkdir build && cd build
 #   $ cmake -DCMAKE_TOOLCHAIN_FILE=path/to/the/android.cmake ..
 #   $ make -j8
@@ -29,19 +28,19 @@ if(NOT JAVA_HOME)
 endif()
 message(STATUS "java: ${JAVA_HOME}")
 
-# Find NDK
-set(ANDROID_NDK $ENV{ANDROID_NDK})
-if(NOT ANDROID_NDK)
-	message(FATAL_ERROR "The ANDROID_NDK environment variable is not set. Please set it.")
+# Find Android SDK & NDK
+set(ANDROID_HOME $ENV{ANDROID_HOME})
+if(NOT ANDROID_HOME)
+	message(FATAL_ERROR "The ANDROID_HOME environment variable is not set. Please set it.")
 endif()
+set(ANDROID_SDK ${ANDROID_HOME})
+message(STATUS "sdk: ${ANDROID_SDK}")
+set(ANDROID_NDK ${ANDROID_HOME}/ndk-bundle)
 message(STATUS "ndk: ${ANDROID_NDK}")
 
-# Find SDK
-set(ANDROID_SDK $ENV{ANDROID_SDK})
-if(NOT ANDROID_SDK)
-	message(FATAL_ERROR "The ANDROID_SDK environment variable is not set. Please set it.")
-endif()
-message(STATUS "sdk: ${ANDROID_SDK}")
+# Force to use API 19
+set(ANDROID_API 19)
+message(STATUS "android api: ${ANDROID_API}")
 
 # Find Last build-tools
 file(GLOB tools RELATIVE ${ANDROID_SDK}/build-tools ${ANDROID_SDK}/build-tools/*)
@@ -49,10 +48,6 @@ list(SORT tools)
 list(REVERSE tools)
 list(GET tools 0 ANDROID_BUILD_TOOL)
 message(STATUS "build-tool: ${ANDROID_BUILD_TOOL}")
-
-# Force to use API 19
-set(ANDROID_API 19)
-message(STATUS "android api: ${ANDROID_API}")
 
 # Force to use arm eabi
 set(ANDROID_TOOLCHAIN_MACHINE_NAME "arm-linux-androideabi")
