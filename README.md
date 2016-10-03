@@ -10,7 +10,7 @@ Note: This project is "hardcoded" for:
 
 **WARNING**
 Qt5.7 provide armv7_a and x86 libraries currently, here only armv7 is use.  
-Qt **androiddeployqt** don't seems to work with bidl tools 19.1.0 -> need build-tools 24.0.3 (could work in between).  
+Qt **androiddeployqt** don't seems to work with build tools 19.1.0 -> need build-tools 24.0.3 (could work in between).  
 For a more complete toolchain, look at the two year old https://github.com/taka-no-me/android-cmake  
 side note: Google (Android Studio 2.2+) have integrated cmake and "taka-no-me" hack in "its" cmake 3.6 package...
 
