@@ -10,8 +10,9 @@ Note: This project is "hardcoded" for:
 
 **WARNING**
 Qt5.7 provide armv7_a and x86 libraries currently, here only armv7 is use.  
+Qt **androiddeployqt** don't seems to work with bidl tools 19.1.0 -> need build-tools 24.0.3 (could work in between).  
 For a more complete toolchain, look at the two year old https://github.com/taka-no-me/android-cmake  
-side note: Google have integrated cmake and taka-no-me hack in "its" cmake 3.6 package...
+side note: Google (Android Studio 2.2+) have integrated cmake and "taka-no-me" hack in "its" cmake 3.6 package...
 
 # HowTo build samples
 ## Native/Host Build 
@@ -25,7 +26,8 @@ make
 To build for android:  
 First, you must make sure that the following environment variables are defined:
 * ```JAVA_HOME```: root directory of the Java JDK (e.g. /usr/lib/jvm/default)
-* ```ANDROID_HOME```: root directory of the Android NDK (e.g. /usr/local/android-ndk-linux)
+* ```ANDROID_HOME```: root directory of the Android SDK (e.g. /usr/local/android-sdk-linux),
+ NDK should be at ```${ANDROID_HOME}/ndk-bundle``` like Android Studio did...
 * ```ANDROID_QT```: root directory of the android Qt5 framework (e.g. ~/Qt/5.4/android_armv7)
 
 Then you can run cmake as usual specifying the toolchain:
