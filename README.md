@@ -96,4 +96,4 @@ create_apk(my_app_apk my_app
 ```
 
 # License
-_qtdroid_ is distributed under the terms of [GPL v3 License](http://opensource.org/licenses/GPL-3.0)
+_qtdroid_ is distributed under the terms of [Apache v2 License](http://www.apache.org/licenses/LICENSE-2.0)
