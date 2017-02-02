@@ -1,7 +1,7 @@
 image: mizux/android:latest
 
 before_script:
-  - apt-get install -qq wget p7zip qtbase5-dev qtdeclarative5-dev
+  - apt-get update && apt-get install -qq wget p7zip qtbase5-dev qtdeclarative5-dev
   - wget -r -nd -nH -np -A'5.7.0-1*Android*.7z' http://download.qt.io/online/qtsdkrepository/linux_x64/android/qt5_57/qt.57.android_armv7/
   - for i in *.7z; do 7zr x $i; done; rm *.7z
   - export ANDROID_QT_HOME=`pwd`/5.7/android_armv7
